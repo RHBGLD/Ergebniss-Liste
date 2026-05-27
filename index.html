@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live-Wettkampf-Ergebnisse</title>
+    <!-- Tailwind CSS für modernes Design -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                🏆 Live-Ergebnisse
+            </h1>
+            <div class="flex items-center gap-2 text-sm bg-blue-700 px-3 py-1.5 rounded-full animate-pulse">
+                <span class="w-2.5 h-2.5 bg-green-400 rounded-full"></span>
+                Live aktualisiert
+            </div>
+        </div>
+    </header>
+
+    <!-- Hauptbereich -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- Filter & Steuerung -->
+        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Nach Name oder Bewerb suchen..." 
+                class="w-full sm:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                oninput="filterResults()"
+            >
+            <div class="flex gap-2 w-full sm:w-auto">
+                <select id="filterBewerb" onchange="filterResults()" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                    <option value="">Alle Bewerbe</option>
+                    <option value="Sprint 100m">Sprint 100m</option>
+                    <option value="Weitsprung">Weitsprung</option>
+                    <option value="Kugelstoßen">Kugelstoßen</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Ergebnistabelle -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wider">
+                            <th class="px-6 py-4 font-semibold">Platz</th>
+                            <th class="px-6 py-4 font-semibold">Name</th>
+                            <th class="px-6 py-4 font-semibold">Art des Bewerbs</th>
+                            <th class="px-6 py-4 font-semibold text-right">Leistung / Punkte</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable" class="divide-y divide-gray-100 text-sm">
+                        <!-- Die Daten werden via JavaScript eingefügt -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript für Daten & Live-Interaktion -->
+    <script>
+        // Beispiel-Daten (Diese können später dynamisch aus einer Datenbank kommen)
+        const wettkampfDaten = [
+            { platz: 1, name: "Max Mustermann", bewerb: "Sprint 100m", leistung: "10.42 s" },
+            { platz: 2, name: "Anna Schmidt", bewerb: "Weitsprung", leistung: "6.24 m" },
+            { platz: 3, name: "Lisa Müller", bewerb: "Sprint 100m", leistung: "11.05 s" },
+            { platz: 4, name: "Ben Wagner", bewerb: "Kugelstoßen", leistung: "18.50 m" },
+            { platz: 5, name: "Sarah Meyer", bewerb: "Weitsprung", leistung: "5.98 m" }
+        ];
+
+        // Funktion zum Rendern der Tabelle
+        function renderTable(daten) {
+            const tableBody = document.getElementById("resultsTable");
+            tableBody.innerHTML = "";
+
+            if (daten.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 italic">Keine Ergebnisse gefunden.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            daten.forEach(row => {
+                // Gold, Silber, Bronze optisch hervorheben
+                let platzBadge = `<span class="font-bold text-gray-700">${row.platz}</span>`;
+                if (row.platz === 1) platzBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-bold shadow-xs">🥇 1</span>`;
+                if (row.platz === 2) platzBadge = `<span class="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-full text-xs font-bold shadow-xs">🥈 2</span>`;
+                if (row.platz === 3) platzBadge = `<span class="bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs font-bold shadow-xs">🥉 3</span>`;
+
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${platzBadge}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900">${row.name}</td>
+                    <td class="px-6 py-4 text-gray-500">
+                        <span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">${row.bewerb}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-semibold text-blue-600 whitespace-nowrap">${row.leistung}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Live-Filterung (Suche & Dropdown)
+        function filterResults() {
+            const searchVal = document.getElementById("searchInput").value.toLowerCase();
+            const bewerbVal = document.getElementById("filterBewerb").value;
+
+            const gefiltert = wettkampfDaten.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchVal) || item.bewerb.toLowerCase().includes(searchVal);
+                const matchesBewerb = bewerbVal === "" || item.bewerb === bewerbVal;
+                return matchesSearch && matchesBewerb;
+            });
+
+            renderTable(gefiltert);
+        }
+
+        // Initiale Anzeige beim Laden der Seite
+        renderTable(wettkampfDaten);
+
+        // Optional: Automatisch neu sortieren nach Leistung (hier exemplarisch statisch initialisiert)
+    </script>
+</body>
+</html>
